@@ -1,176 +1,72 @@
 #!/usr/bin/env bash
 
-# Install some stuff before others!
-important_casks=(
-  authy
-  dropbox
-  #google-chrome
-  hyper
-  jetbrains-toolbox
-  istat-menus
-  spotify
-  franz
-  visual-studio-code
-  slack
-)
+# Adapted from
+# https://github.com/pathikrit/mac-setup-script/blob/master/install.sh
+# https://gist.github.com/bradp/bea76b16d3325f5c47d4
 
-brews=(
-  xonsh
-  jabba
-  awscli
-  "bash-snippets --without-all-tools --with-cryptocurrency --with-stocks --with-weather"
-  bat
-  #cheat
-  coreutils
-  dfc
-  exa
-  findutils
-  "fontconfig --universal"
-  fpp
-  git
-  git-extras
-  git-fresh
-  git-lfs
-  "gnuplot --with-qt"
-  "gnu-sed --with-default-names"
-  go
-  gpg
-  haskell-stack
-  hh
-  #hosts
-  htop
-  httpie
-  iftop
-  "imagemagick --with-webp"
-  lighttpd
-  lnav
-  m-cli
-  mackup
-  macvim
-  mas
-  micro
-  moreutils
-  mtr
-  ncdu
-  neofetch
-  nmap  
-  node
-  poppler
-  postgresql
-  pgcli
-  pv
-  python
-  python3
-  osquery
-  ruby
-  scala
-  sbt
-  shellcheck
-  stormssh
-  teleport
-  thefuck
-  tmux
-  tree
-  trash
-  "vim --with-override-system-vi"
-  #volumemixer
-  "wget --with-iri"
-  xsv
-  youtube-dl
-)
+### TO DO ###
 
+# [ ] Apply $PATH changes (see below) to all users
+
+### APPLICATIONS ###
+
+# Applications to be installed as casks
 casks=(
-  aerial
-  adobe-acrobat-pro
-  airdroid
-  android-platform-tools
-  cakebrew
-  cleanmymac
-  docker
-  expressvpn
-  firefox
-  geekbench
-  google-backup-and-sync
+  1password
+  a-better-finder-attributes
+  adobe-acrobat-reader
+  adobe-digital-editions
+  alfred
+  android-studio
+  arq
+  atom
+  calibre
+  dropbox
+  epichrome
+  evernote
+  flowsync
+  geotag
   github
-  handbrake
-  iina
-  istat-server  
-  launchrocket
-  kap-beta
-  qlcolorcode
-  qlmarkdown
-  qlstephen
-  quicklook-json
-  quicklook-csv
-  macdown
-  #muzzle
-  plex-media-player
-  plex-media-server
-  private-eye
-  satellite-eyes
-  sidekick
-  skype
-  sloth
-  steam
-  transmission
-  transmission-remote-gui
-  xquartz
+  google-chrome
+  java
+  kindle
+  microsoft-word
+  microsoft-excel
+  microsoft-powerpoint
+  notion
+  onedrive
+  postman
+  remember-the-milk
+  slack
+  slic3r
+  station
+  wireshark
 )
 
-pips=(
-  pip
-  glances
-  ohmu
-  pythonpy
+# Applications to be installed as brews
+brews=(
+  cocoapods
+  # mackup
+  mas # Command-line interface for the Mac App Store
+  node@10
+  python
+  watchman
 )
 
-gems=(
-  bundler
-  travis
-)
-
+# Node packages
 npms=(
-  fenix-cli
-  gitjk
-  kill-tabs
-  n
+  react-native-cli
 )
 
-gpg_key='3E219504'
-git_email='pathikritbhowmick@msn.com'
-git_configs=(
-  "branch.autoSetupRebase always"
-  "color.ui auto"
-  "core.autocrlf input"
-  "credential.helper osxkeychain"
-  "merge.ff false"
-  "pull.rebase true"
-  "push.default simple"
-  "rebase.autostash true"
-  "rerere.autoUpdate true"
-  "remote.origin.prune true"
-  "rerere.enabled true"
-  "user.name pathikrit"
-  "user.email ${git_email}"
-  "user.signingkey ${gpg_key}"
+#Applications to be installed from Mac App Store
+mac_apps=(
+#  '918858936'   # Airmail 3
+#  '1091189122'  # Bear
+  '497799835'   # Xcode
 )
 
-vscode=(
-  alanz.vscode-hie-server
-  rebornix.Ruby
-  redhat.java
-  rust-lang.rust
-  scalameta.metals
-)
+### FUNCTIONS ###
 
-fonts=(
-  font-fira-code
-  font-source-code-pro
-)
-
-JDK_VERSION=amazon-corretto@1.8.222-10.1
-
-######################################## End of app list ########################################
 set +e
 set -x
 
@@ -200,16 +96,18 @@ function install {
 
 function brew_install_or_upgrade {
   if brew ls --versions "$1" >/dev/null; then
-    if (brew outdated | grep "$1" > /dev/null); then 
+    if (brew outdated | grep "$1" > /dev/null); then
       echo "Upgrading already installed package $1 ..."
       brew upgrade "$1"
-    else 
+    else
       echo "Latest $1 is already installed"
     fi
   else
     brew install "$1"
   fi
 }
+
+### EXECUTABLE ###
 
 if [[ -z "${CI}" ]]; then
   sudo -v # Ask for the administrator password upfront
@@ -230,84 +128,35 @@ else
 fi
 export HOMEBREW_NO_AUTO_UPDATE=1
 
-echo "Install important software ..."
-brew tap caskroom/versions
-install 'brew cask install' "${important_casks[@]}"
-
-prompt "Install packages"
+prompt "Install brews"
 install 'brew_install_or_upgrade' "${brews[@]}"
-brew link --overwrite ruby
 
-prompt "Install JDK=${JDK_VERSION}"
-curl -sL https://github.com/shyiko/jabba/raw/master/install.sh | bash && . ~/.jabba/jabba.sh
-jabba install ${JDK_VERSION}
-jabba alias default ${JDK_VERSION}
-java -version
+prompt "Install casks"
+install 'brew cask install --appdir=/Applications' "${casks[@]}"
 
-prompt "Set git defaults"
-for config in "${git_configs[@]}"
-do
-  git config --global ${config}
-done
+# node@10 is keg-only, which means it is not symlinked into /usr/local,
+# because this is an alternate version of another formula.
+# To add node@10 to $PATH of current user:
+echo 'export PATH="/usr/local/opt/node@10/bin:$PATH"' >> ~/.bash_profile
+# To add node@10 to $PATH of all users:
+#echo 'export PATH="/usr/local/opt/node@10/bin:$PATH"' >> /etc/profile
 
-if [[ -z "${CI}" ]]; then
-  gpg --keyserver hkp://pgp.mit.edu --recv ${gpg_key}
-  prompt "Export key to Github"
-  ssh-keygen -t rsa -b 4096 -C ${git_email}
-  pbcopy < ~/.ssh/id_rsa.pub
-  open https://github.com/settings/ssh/new
-fi  
+# For compilers to find node@10 you may need to set:
+export LDFLAGS="-L/usr/local/opt/node@10/lib"
+export CPPFLAGS="-I/usr/local/opt/node@10/include"
 
-prompt "Upgrade bash"
-brew install bash bash-completion2 fzf
-sudo bash -c "echo $(brew --prefix)/bin/bash >> /private/etc/shells"
-#sudo chsh -s "$(brew --prefix)"/bin/bash
-# Install https://github.com/twolfson/sexy-bash-prompt
-touch ~/.bash_profile #see https://github.com/twolfson/sexy-bash-prompt/issues/51
-(cd /tmp && git clone --depth 1 --config core.autocrlf=false https://github.com/twolfson/sexy-bash-prompt && cd sexy-bash-prompt && make install) && source ~/.bashrc
-
-echo "
-alias del='mv -t ~/.Trash/'
-alias ls='exa -l'
-alias cat=bat
-" >> ~/.bash_profile
-
-prompt "Setting up xonsh"
-sudo bash -c "which xonsh >> /private/etc/shells"
-sudo chsh -s $(which xonsh)
-echo "source-bash --overwrite-aliases ~/.bash_profile" >> ~/.xonshrc
-
-prompt "Install software"
-install 'brew cask install' "${casks[@]}"
-
-prompt "Install secondary packages"
-install 'pip3 install --upgrade' "${pips[@]}"
-install 'gem install' "${gems[@]}"
+prompt "Install npms"
 install 'npm install --global' "${npms[@]}"
-install 'code --install-extension' "${vscode[@]}"
-brew tap caskroom/fonts
-install 'brew cask install' "${fonts[@]}"
 
-prompt "Changle Slack to dark"
-cd ~/Downloads
-git clone https://github.com/LanikSJ/slack-dark-mode
-cd slack-dark-mode
-./slack-dark-mode.sh 
-
-prompt "Update packages"
-pip3 install --upgrade pip setuptools wheel
-if [[ -z "${CI}" ]]; then
-  m update install all
-fi
-
-if [[ -z "${CI}" ]]; then
-  prompt "Install software from App Store"
-  mas list
-fi
+prompt "Install apps from Mac App Store"
+# Sign in to App Store
+# The signin command has been temporarily disabled on macOS 10.13+
+# See https://github.com/mas-cli/mas/issues/164
+#mas signin --dialog vass.apple.store.ch@gmail.com
+install 'mas install' "${mac_apps[@]}"
 
 prompt "Cleanup"
 brew cleanup
-brew cask cleanup
 
-echo "Run [mackup restore] after DropBox has done syncing ..."
+echo "Run [mackup restore] after Dropbox is done syncing ..."
 echo "Done!"

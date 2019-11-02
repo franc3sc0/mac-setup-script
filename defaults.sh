@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 
-# Adapted from https://github.com/mathiasbynens/dotfiles/blob/master/.macos
+# Adapted from https://github.com/pathikrit/mac-setup-script/blob/master/defaults.sh
+
+### MANUAL SETTINGS ###
+
+# Hostname:
+# System Preferences > Sharing > Computer Name
+
+### SCRIPTED SETTINGS ###
 
 set -x
 
@@ -10,16 +17,23 @@ if [[ -z "${CI}" ]]; then
   while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 fi
 
-# Trackpad: enable tap to click for this user and for the login screen
-defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
-defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
-defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
-
-# Disable the sound effects on boot
-sudo nvram SystemAudioVolume=" "
-
 # Close any open System Preferences panes, to prevent them from overriding settings we’re about to change
 osascript -e 'tell application "System Preferences" to quit'
+
+# Create users
+sudo sysadminctl -addUser francesco -fullName "Francesco Vass" -picture "/Library/User Pictures/Animals/Penguin.tif"
+sudo sysadminctl -addUser francesca -fullName "Francesca Vass" -picture "/Library/User Pictures/Fun/Smack.tif"
+sudo sysadminctl -addUser matteo -fullName "Matteo Vass" -picture "/Library/User Pictures/Sports/Basketball.png"
+sudo sysadminctl -addUser cecilia -fullName "Cecilia Vass" -picture "/Library/User Pictures/Nature/Cactus.tif"
+
+# Disable the sound effects on boot
+#sudo nvram SystemAudioVolume=" "
+
+# Setting trackpad & mouse speed to a reasonable number
+#defaults write -g com.apple.trackpad.scaling 2
+defaults write -g com.apple.mouse.scaling 1
+
+### GLOBAL SETTINGS ###
 
 # Expand save panel by default
 defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
@@ -32,6 +46,18 @@ defaults write NSGlobalDomain PMPrintingExpandedStateForPrint2 -bool true
 # Save to disk (not to iCloud) by default
 defaults write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
 
+# Disable auto corrections
+#defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false      # Disable automatic capitalization
+#defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false    # Disable smart dashes
+#defaults write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false  # Disable automatic period substitution
+#defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false   # Disable smart quotes
+#defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false  # Disable auto-correct
+
+# Enable full keyboard access for all controls e.g. enable Tab in modal dialogs
+#defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
+
+### USER-SPECIFIC SETTINGS ###
+
 # Automatically quit printer app once the print jobs complete
 defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
 
@@ -39,33 +65,42 @@ defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
 defaults write com.apple.LaunchServices LSQuarantine -bool false
 
 # Reveal IP address, hostname, OS version, etc. when clicking the clock in the login window
-sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
+#sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
 
-# Disable auto corrections
-defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false      # Disable automatic capitalization
-defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false    # Disable smart dashes
-defaults write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false  # Disable automatic period substitution
-defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false   # Disable smart quotes
-defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false  # Disable auto-correct
-
-# Enable full keyboard access for all controls e.g. enable Tab in modal dialogs
-defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
 
 # Finder: allow quitting via ⌘ + Q; doing so will also hide desktop icons
-defaults write com.apple.finder QuitMenuItem -bool true
+#defaults write com.apple.finder QuitMenuItem -bool true
 
 # Set Desktop as the default location for new Finder windows
 defaults write com.apple.finder NewWindowTarget -string "PfDe"
 defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/Desktop/"
 
-defaults write com.apple.finder AppleShowAllFiles -bool true        # Finder: Show hidden files by default
-defaults write NSGlobalDomain AppleShowAllExtensions -bool true     # Finder: Show all filename extensions
-defaults write com.apple.finder ShowStatusBar -bool true            # Finder: Show status bar
-defaults write com.apple.finder ShowPathbar -bool true              # Finder: Show path bar
-defaults write com.apple.finder _FXShowPosixPathInTitle -bool true  # Finder: Display full POSIX path as window title
-defaults write com.apple.finder _FXSortFoldersFirst -bool true      # Finder: Keep folders on top when sorting by name
+# Enable snap-to-grid for icons on the desktop and in other icon views
+/usr/libexec/PlistBuddy -c "Set :DesktopViewSettings:IconViewSettings:arrangeBy grid" ~/Library/Preferences/com.apple.finder.plist
+/usr/libexec/PlistBuddy -c "Set :FK_StandardViewSettings:IconViewSettings:arrangeBy grid" ~/Library/Preferences/com.apple.finder.plist
+/usr/libexec/PlistBuddy -c "Set :StandardViewSettings:IconViewSettings:arrangeBy grid" ~/Library/Preferences/com.apple.finder.plist
+
+# Set the icon size of Dock items
+defaults write com.apple.dock tilesize -int 36
+
+# Set Dock to auto-hide
+defaults write com.apple.dock autohide -bool true
+
+# Move Dock to left
+defaults write com.apple.dock orientation -string "left"
+
+# Removing the Dock's auto-hiding delay
+defaults write com.apple.dock autohide-delay -float 0
+defaults write com.apple.dock autohide-time-modifier -float 0
+
+#defaults write com.apple.finder AppleShowAllFiles -bool true        # Finder: Show hidden files by default
+#defaults write NSGlobalDomain AppleShowAllExtensions -bool true     # Finder: Show all filename extensions
+#defaults write com.apple.finder ShowStatusBar -bool true            # Finder: Show status bar
+#defaults write com.apple.finder ShowPathbar -bool true              # Finder: Show path bar
+#defaults write com.apple.finder _FXShowPosixPathInTitle -bool true  # Finder: Display full POSIX path as window title
+#defaults write com.apple.finder _FXSortFoldersFirst -bool true      # Finder: Keep folders on top when sorting by name
 chflags nohidden ~/Library     # Show the ~/Library folder
-sudo chflags nohidden /Volumes # Show the /Volumes folder
+#sudo chflags nohidden /Volumes # Show the /Volumes folder
 
 # Avoid creating .DS_Store files on network or USB volumes
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true

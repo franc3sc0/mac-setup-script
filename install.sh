@@ -18,6 +18,7 @@ casks=(
   adobe-digital-editions
   alfred
   android-studio
+  arduino
   arq
   atom
   calibre

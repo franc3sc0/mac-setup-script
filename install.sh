@@ -49,14 +49,14 @@ brews=(
   cocoapods
   # mackup
   mas # Command-line interface for the Mac App Store
-  node@10
+  # node # Better to install node with nvm: https://github.com/nvm-sh/nvm
   python
   watchman
 )
 
 # Node packages
 npms=(
-  react-native-cli
+  # react-native-cli # This is deprecated
 )
 
 #Applications to be installed from Mac App Store
